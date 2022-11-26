@@ -1,0 +1,5 @@
+# i don't really think these should be here tbh
+
+.venv
+.git
+.idea
