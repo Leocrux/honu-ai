@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Request, Body, status, HTTPException
+from fastapi import APIRouter, Request, Body, status, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from beanie.odm.operators.update.general import Set
+from beanie.operators import Set, In, ElemMatch, And
+from beanie.odm.queries.find import FindQuery
 from app.models import ServiceProviderModel, UpdateServiceProviderSchema, ServiceProviderSchema
+from typing import Union
 
 router = APIRouter()
 
@@ -10,8 +12,27 @@ router = APIRouter()
 # CRUD for ServiceProvider
 
 @router.get("/", response_description="List all Service Providers", response_model=list[ServiceProviderModel])
-async def get_providers():
-    providers = await ServiceProviderModel.find_all().to_list()
+async def get_providers(name: Union[str, None] = Query(default=None),
+                        skills: Union[list[str], None] = Query(default=None),
+                        cost__gte: Union[int, None] = Query(default=None),
+                        cost__lt: Union[int, None] = Query(default=None),
+                        reviews__gte: Union[float, None] = Query(default=None),
+                        reviews__lt: Union[float, None] = Query(default=None)):
+    query = []
+    if skills:
+        query.append(In(ServiceProviderModel.skills, skills))
+    if name:
+        query.append(ServiceProviderModel.name == name)
+    if cost__gte:
+        query.append(ServiceProviderModel.cost >= cost__gte)
+    if cost__lt:
+        query.append(ServiceProviderModel.cost < cost__lt)
+    if reviews__gte:
+        query.append(ServiceProviderModel.reviews >= reviews__gte)
+    if reviews__lt:
+        query.append(ServiceProviderModel.reviews < reviews__lt)
+
+    providers = await ServiceProviderModel.find(And(*query) if query else {}).to_list()
     return providers
 
 
