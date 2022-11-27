@@ -1,7 +1,7 @@
 from typing import Optional
 import uuid
 from pydantic import BaseModel, Field
-
+from beanie import Document
 from datetime import datetime
 
 
@@ -25,7 +25,12 @@ class ServiceProviderSchema(BaseModel):
         }
 
 
-class UpdateServiceProvider(BaseModel):
+class ServiceProviderModel(ServiceProviderSchema, Document):
+    class Settings:
+        name = "service_provider_collection"
+
+
+class UpdateServiceProviderSchema(BaseModel):
     name: Optional[str]
     skills: Optional[list[str]]
     cost: Optional[float]
