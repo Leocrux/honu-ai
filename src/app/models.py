@@ -1,8 +1,14 @@
 from typing import Optional
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 from beanie import Document
-from datetime import datetime
+from datetime import date, datetime
+from typing_extensions import TypedDict
+
+
+class DateRange(TypedDict):
+    start_date: date
+    end_date: date
 
 
 class ServiceProviderSchema(BaseModel):
@@ -10,8 +16,15 @@ class ServiceProviderSchema(BaseModel):
     name: str = Field(...)
     skills: list[str] = Field(...)
     cost: int = Field(..., gt=0)
-    availability: list[tuple[datetime, datetime]] = Field(...)  # todo need to check a bunch of things here
+    availability: list[DateRange] = Field(...)
     reviews: Optional[float] = Field(None, gt=0.0, le=5.0)
+
+    @validator("availability")
+    def start_date_prior_end_date(cls, availability):
+        for v in availability:
+            if v["start_date"] >= v["end_date"]:
+                raise ValueError(f"Availability {v} start date after end date")
+        return availability
 
     class Config:
         schema_extra = {
@@ -19,7 +32,10 @@ class ServiceProviderSchema(BaseModel):
                 "name": "SEO Inc",
                 "skills": ["A skill", "No skill"],
                 "cost": 250,
-                "availability": [("2022-11-01T00:00", "2022-11-10T00:00"), ("2022-11-20T00:00", "2022-11-22T00:00")],
+                "availability": [
+                    {"start_date": "2022-11-01", "end_date": "2022-11-10"},
+                    {"start_date": "2022-12-01", "end_date": "2022-12-10"},
+                ],
                 "reviews": 3.5,
             }
         }
@@ -28,11 +44,33 @@ class ServiceProviderSchema(BaseModel):
 class ServiceProviderModel(ServiceProviderSchema, Document):
     class Settings:
         name = "service_provider_collection"
+        bson_encoders = {date: lambda o: datetime.combine(o, datetime.min.time())}
 
 
 class UpdateServiceProviderSchema(BaseModel):
     name: Optional[str]
     skills: Optional[list[str]]
     cost: Optional[float]
-    availability: Optional[list[tuple[datetime, datetime]]]
+    availability: Optional[list[DateRange]]
     reviews: Optional[float]
+
+    @validator("availability")
+    def start_date_prior_end_date(cls, availability):
+        for v in availability:
+            if v["start_date"] >= v["end_date"]:
+                raise ValueError(f"Availability {v} start date after end date")
+        return availability
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "name": "SEO Inc",
+                "skills": ["A skill", "No skill"],
+                "cost": 250,
+                "availability": [
+                    {"start_date": "2022-11-01", "end_date": "2022-11-10"},
+                    {"start_date": "2022-12-01", "end_date": "2022-12-10"},
+                ],
+                "reviews": 3.5,
+            }
+        }

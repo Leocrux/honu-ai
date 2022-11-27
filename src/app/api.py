@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Request, Body, status, HTTPException, Query
+from fastapi import APIRouter, Body, status, HTTPException, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from beanie.operators import Set, In, ElemMatch, And
-from beanie.odm.queries.find import FindQuery
-from app.models import ServiceProviderModel, UpdateServiceProviderSchema, ServiceProviderSchema
+from beanie.operators import Set, In, And
+from app.models import (
+    ServiceProviderModel,
+    UpdateServiceProviderSchema,
+    ServiceProviderSchema,
+)
 from typing import Union
 
 router = APIRouter()
@@ -11,13 +14,20 @@ router = APIRouter()
 
 # CRUD for ServiceProvider
 
-@router.get("/", response_description="List all Service Providers", response_model=list[ServiceProviderModel])
-async def get_providers(name: Union[str, None] = Query(default=None),
-                        skills: Union[list[str], None] = Query(default=None),
-                        cost__gte: Union[int, None] = Query(default=None),
-                        cost__lt: Union[int, None] = Query(default=None),
-                        reviews__gte: Union[float, None] = Query(default=None),
-                        reviews__lt: Union[float, None] = Query(default=None)):
+
+@router.get(
+    "/",
+    response_description="List all Service Providers",
+    response_model=list[ServiceProviderModel],
+)
+async def get_providers(
+    name: Union[str, None] = Query(default=None),
+    skills: Union[list[str], None] = Query(default=None),
+    cost__gte: Union[int, None] = Query(default=None),
+    cost__lt: Union[int, None] = Query(default=None),
+    reviews__gte: Union[float, None] = Query(default=None),
+    reviews__lt: Union[float, None] = Query(default=None),
+):
     query = []
     if skills:
         query.append(In(ServiceProviderModel.skills, skills))
@@ -36,16 +46,26 @@ async def get_providers(name: Union[str, None] = Query(default=None),
     return providers
 
 
-@router.post("/", response_description="Add new Service Provider", response_model=ServiceProviderSchema)
+@router.post(
+    "/",
+    response_description="Add new Service Provider",
+    response_model=ServiceProviderSchema,
+)
 async def create_provider(provider: ServiceProviderSchema = Body(...)):
     provider = jsonable_encoder(provider)
     new_provider = await ServiceProviderModel(**provider).create()
     return new_provider
 
 
-@router.get("/{id}", response_description="Get a single provider", response_model=ServiceProviderSchema)
-async def show_provider(id: str, request: Request):
-    if (provider := await ServiceProviderModel.find_one(ServiceProviderModel.id == id)) is not None:
+@router.get(
+    "/{id}",
+    response_description="Get a single provider",
+    response_model=ServiceProviderSchema,
+)
+async def show_provider(id: str):
+    if (
+        provider := await ServiceProviderModel.find_one(ServiceProviderModel.id == id)
+    ) is not None:
         return provider
     raise HTTPException(status_code=404, detail=f"Provider {id} not found")
 
@@ -55,16 +75,22 @@ async def update_provider(id: str, provider: UpdateServiceProviderSchema = Body(
     provider = {k: v for k, v in provider.dict().items() if v is not None}
 
     if len(provider) >= 1:
-        update_result = await ServiceProviderModel.find_one(ServiceProviderModel.id == id).update(Set(provider))
+        update_result = await ServiceProviderModel.find_one(
+            ServiceProviderModel.id == id
+        ).update(Set(provider))
 
         if update_result.modified_count == 1:
             if (
-                    updated_provider := await ServiceProviderModel.find_one(ServiceProviderModel.id == id)
+                updated_provider := await ServiceProviderModel.find_one(
+                    ServiceProviderModel.id == id
+                )
             ) is not None:
                 return updated_provider
 
     if (
-            existing_provider := await ServiceProviderModel.find_one(ServiceProviderModel.id == id)
+        existing_provider := await ServiceProviderModel.find_one(
+            ServiceProviderModel.id == id
+        )
     ) is not None:
         return existing_provider
 
@@ -73,7 +99,9 @@ async def update_provider(id: str, provider: UpdateServiceProviderSchema = Body(
 
 @router.delete("/{id}", response_description="Delete provider")
 async def delete_provider(id: str):
-    delete_result = await ServiceProviderModel.find_one(ServiceProviderModel.id == id).delete()
+    delete_result = await ServiceProviderModel.find_one(
+        ServiceProviderModel.id == id
+    ).delete()
 
     if delete_result.deleted_count == 1:
         return JSONResponse(status_code=status.HTTP_204_NO_CONTENT, content=None)
