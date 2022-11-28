@@ -1,8 +1,9 @@
-from typing import Optional
 import uuid
-from pydantic import BaseModel, Field, validator
-from beanie import Document
 from datetime import date, datetime
+from typing import Optional
+
+from beanie import Document
+from pydantic import BaseModel, Field, validator
 from typing_extensions import TypedDict
 
 

@@ -1,13 +1,12 @@
-from fastapi import APIRouter, Body, status, HTTPException, Query
+from typing import Union
+
+from beanie.operators import And, In, Set
+from fastapi import APIRouter, Body, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from beanie.operators import Set, In, And
-from app.models import (
-    ServiceProviderModel,
-    UpdateServiceProviderSchema,
-    ServiceProviderSchema,
-)
-from typing import Union
+
+from app.models import (ServiceProviderModel, ServiceProviderSchema,
+                        UpdateServiceProviderSchema)
 
 router = APIRouter()
 

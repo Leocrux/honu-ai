@@ -1,12 +1,14 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from beanie import init_beanie
-from fastapi import FastAPI, APIRouter, Query
-
-from app.settings import MONGO_DB_URL, MONGO_DB
-from app.api import router as ServiceProviderRouter
-
-from app.models import ServiceProviderModel
 from typing import Union
+
+from beanie import init_beanie
+from fastapi import APIRouter, FastAPI, Query
+from fastapi.encoders import jsonable_encoder
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from app.api import router as ServiceProviderRouter
+from app.models import ServiceProviderModel
+from app.settings import MONGO_DB, MONGO_DB_URL
+from tests.datafile import testdata
 
 router = APIRouter()
 
@@ -79,6 +81,14 @@ async def get_available_providers(
         aggregation_pipeline=aggr_pipeline, projection_model=ServiceProviderModel
     ).to_list()
     return providers
+
+
+@app.get("/populate_mock_data", response_description="Add 3 items into collection")
+async def populate_mock_data():
+    for data in testdata:
+        provider = jsonable_encoder(data)
+        new_provider = await ServiceProviderModel(**provider).create()
+    return {"OK": "OK"}
 
 
 @app.on_event("startup")
