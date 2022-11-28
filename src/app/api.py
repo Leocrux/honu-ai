@@ -5,8 +5,11 @@ from fastapi import APIRouter, Body, HTTPException, Query, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
-from app.models import (ServiceProviderModel, ServiceProviderSchema,
-                        UpdateServiceProviderSchema)
+from app.models import (
+    ServiceProviderModel,
+    ServiceProviderSchema,
+    UpdateServiceProviderSchema,
+)
 
 router = APIRouter()
 
@@ -27,6 +30,7 @@ async def get_providers(
     reviews__gte: Union[float, None] = Query(default=None),
     reviews__lt: Union[float, None] = Query(default=None),
 ):
+    """Fetches all providers that match the description with *any* of the skills"""
     query = []
     if skills:
         query.append(In(ServiceProviderModel.skills, skills))
@@ -71,6 +75,7 @@ async def show_provider(id: str):
 
 @router.put("/{id}", response_description="Update a provider")
 async def update_provider(id: str, provider: UpdateServiceProviderSchema = Body(...)):
+    """Update only if new data is available. Failure to check for this would result in deleting existing data"""
     provider = {k: v for k, v in provider.dict().items() if v is not None}
 
     if len(provider) >= 1:
