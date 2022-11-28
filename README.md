@@ -3,6 +3,62 @@
 A marketplace for service providers.
 
 
+## To start app
+
+ - run docker compose
+ - (optional) add mock data to MongoDB
+
+```bash
+>> docker-compose up -d --build      
+
+>> curl -X 'GET' \
+  'http://localhost:8002/populate_mock_data' \
+  -H 'accept: application/json' 
+```
+
+## Manual tests
+
+### Not exhaustive test cases
+
+```bash
+>> curl -X 'GET' \
+  'http://localhost:8002/get_available_providers?skills=A&budget=100' \
+  -H 'accept: application/json'
+```
+
+Should return Provider **SEO Inc 3**
+
+
+```bash
+>> curl -X 'GET' \
+  'http://localhost:8002/get_available_providers?skills=A&budget=100&reviews__gte=4' \
+  -H 'accept: application/json'
+```
+
+Should return []
+
+
+```bash
+>> curl -X 'GET' \
+  'http://localhost:8002/get_available_providers?skills=A&budget=10000' \
+  -H 'accept: application/json'
+
+```
+
+Should return Provider **SEO Inc 1**, **SEO Inc 3** 
+
+
+
+```bash
+>> curl -X 'GET' \
+  'http://localhost:8002/get_available_providers?skills=C&skills=A&budget=10000' \
+  -H 'accept: application/json'
+
+```
+
+Should return Provider **SEO Inc 3** 
+
+
 ## API Reference
 
 ### Utils
