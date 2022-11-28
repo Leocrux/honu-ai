@@ -18,6 +18,8 @@ A marketplace for service providers.
 
 ## Manual tests
 
+**I did start to write unittests but realised that Mongomock does not support $dateDiff yet... resort to manual test for now**
+
 ### Not exhaustive test cases
 
 ```bash
